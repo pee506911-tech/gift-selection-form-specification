@@ -1,4 +1,4 @@
-name = "Jotform"
+name = "jotform"
 main = "src/worker/index.ts"
 compatibility_date = "2024-12-01"
 
