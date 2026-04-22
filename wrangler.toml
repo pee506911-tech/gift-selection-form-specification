@@ -7,11 +7,10 @@ compatibility_date = "2024-12-01"
 directory = "dist"
 binding = "ASSETS"
 
-# TiDB Database Binding (D1-compatible for serverless driver)
-[[d1_databases]]
-binding = "DB"
-database_name = "gift_selection_db"
-database_id = "your-database-id"  # Replace with actual D1 database ID
+# TiDB Serverless Connection
+# Set your TiDB connection string as a secret:
+# npx wrangler secret put TIDB_CONNECTION_STRING
+# Format: mysql://user:password@host:4000/database?sslaccept=strict
 
 # R2 Bucket Binding for image storage
 [[r2_buckets]]

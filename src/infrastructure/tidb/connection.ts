@@ -1,6 +1,5 @@
-// TiDB/D1 database connection adapter
-// Using D1 for now - will switch to TiDB serverless driver when correct package is available
-
+// TiDB Serverless database connection adapter
+import { connect } from '@tidbcloud/serverless';
 import type { AppError, Result } from '../../domain/errors';
 import { storageReadError, storageWriteError, success, failure } from '../../domain/errors';
 
@@ -10,12 +9,14 @@ export interface TiDBConnection {
   close(): Promise<void>;
 }
 
-export function createTiDBConnection(db: D1Database): TiDBConnection {
+export function createTiDBConnection(connectionString: string): TiDBConnection {
+  const conn = connect({ url: connectionString });
+
   return {
     async query(sql: string, params: any[] = []): Promise<Result<any[], AppError>> {
       try {
-        const result = await db.prepare(sql).bind(...params).all();
-        return success(result.results);
+        const result = await conn.execute(sql, params);
+        return success(result.rows as any[]);
       } catch (error) {
         return failure(storageReadError(sql, error));
       }
@@ -23,7 +24,7 @@ export function createTiDBConnection(db: D1Database): TiDBConnection {
 
     async execute(sql: string, params: any[] = []): Promise<Result<any, AppError>> {
       try {
-        const result = await db.prepare(sql).bind(...params).run();
+        const result = await conn.execute(sql, params);
         return success(result);
       } catch (error) {
         return failure(storageWriteError(sql, error));
@@ -31,8 +32,8 @@ export function createTiDBConnection(db: D1Database): TiDBConnection {
     },
 
     async close(): Promise<void> {
-      // D1 handles connection pooling automatically
-      // No explicit close needed
+      // TiDB serverless driver handles connection pooling
+      // No explicit close needed for HTTP connections
     },
   };
 }

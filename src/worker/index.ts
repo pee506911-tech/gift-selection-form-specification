@@ -144,7 +144,7 @@ function validateGiftId(input: string): string | null {
 
 // Type definitions for Cloudflare bindings
 interface Env {
-  DB: D1Database;
+  TIDB_CONNECTION_STRING: string;
   IMAGES: R2Bucket;
   FORM_DO: DurableObjectNamespace;
   ASSETS: Fetcher;  // Workers Assets binding for static files
@@ -182,7 +182,7 @@ app.get('/api/health', async (c) => {
 
   // Check database connectivity
   try {
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     await db.execute('SELECT 1');
     health.checks.database = 'ok';
   } catch (error) {
@@ -213,7 +213,7 @@ app.get('/api/forms/:slug/bootstrap', async (c) => {
 
   try {
     // Wire up dependencies
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const giftRepo = createGiftRepository(db);
     const submissionRepo = createSubmissionRepository(db);
     const formRepo = createFormRepository(db);
@@ -273,7 +273,7 @@ app.post('/api/forms/:slug/submissions', rateLimit(10, 60000), async (c) => {
     }
 
     // Wire up dependencies
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const giftRepo = createGiftRepository(db);
     const submissionRepo = createSubmissionRepository(db);
     const formRepo = createFormRepository(db);
@@ -369,7 +369,7 @@ app.get('/api/admin/forms/:formId/gifts', requireAuth(), async (c) => {
   const requestId = c.req.header('x-request-id');
 
   try {
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const giftRepo = createGiftRepository(db);
     const result = await giftRepo.findByFormId(formId);
 
@@ -422,7 +422,7 @@ app.post('/api/admin/forms/:formId/gifts', requireAuth(), async (c) => {
       return c.json({ error: 'Invalid sortOrder: must be a non-negative number' }, 400);
     }
 
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const giftRepo = createGiftRepository(db);
     const idGenerator = createUuidIdGenerator();
     const clock = createRealClock();
@@ -469,7 +469,7 @@ app.put('/api/admin/forms/:formId/gifts/:giftId', requireAuth(), async (c) => {
     const body = await c.req.json();
     const { name, code, description, imageKey, status, sortOrder } = body;
 
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const giftRepo = createGiftRepository(db);
 
     const existingResult = await giftRepo.findById(giftId as any);
@@ -510,7 +510,7 @@ app.delete('/api/admin/forms/:formId/gifts/:giftId', requireAuth(), async (c) =>
   const requestId = c.req.header('x-request-id');
 
   try {
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const giftRepo = createGiftRepository(db);
 
     const result = await giftRepo.delete(giftId as any);
@@ -548,7 +548,7 @@ app.get('/api/admin/forms/:formId/submissions', requireAuth(), async (c) => {
   }
 
   try {
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const submissionRepo = createSubmissionRepository(db);
     const result = await submissionRepo.findByFormIdPaginated(formId, page, limit);
 
@@ -582,7 +582,7 @@ app.get('/api/admin/forms/:formId/submissions/export', requireAuth(), async (c) 
   const requestId = c.req.header('x-request-id');
 
   try {
-    const db = createTiDBConnection(bindings.DB);
+    const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const submissionRepo = createSubmissionRepository(db);
     const result = await submissionRepo.findByFormId(formId);
 
