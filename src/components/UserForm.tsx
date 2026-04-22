@@ -11,6 +11,8 @@ import {
   RefreshCw,
   Lock,
   Timer,
+  Maximize2,
+  X,
 } from 'lucide-react';
 
 /* ─── Hardcoded CMS Data ─── */
@@ -306,6 +308,7 @@ function JFGiftCard({
   justTakenBy?: string;
   onSelect: () => void;
 }) {
+  const [showFullscreen, setShowFullscreen] = useState(false);
   const imageUrl = `/images/${gift.imageKey}`;
 
   return (
@@ -384,6 +387,19 @@ function JFGiftCard({
             }}
           />
           
+          {/* Fullscreen button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowFullscreen(true);
+            }}
+            className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/50 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+            title="View full screen"
+          >
+            <Maximize2 size={16} />
+          </button>
+          
           {/* Selected checkmark overlay */}
           {isSelected && (
             <motion.div
@@ -427,6 +443,44 @@ function JFGiftCard({
           </p>
         </div>
       </div>
+
+      {/* Fullscreen Modal */}
+      <AnimatePresence>
+        {showFullscreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            onClick={() => setShowFullscreen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-4xl max-h-[90vh] w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowFullscreen(false)}
+                className="absolute -top-10 right-0 p-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+                title="Close"
+              >
+                <X size={24} />
+              </button>
+              <img
+                src={imageUrl}
+                alt={gift.name}
+                className="w-full h-full max-h-[85vh] object-contain rounded-lg"
+              />
+              <div className="mt-3 text-center">
+                <h3 className="text-white font-semibold text-lg">{gift.name}</h3>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
