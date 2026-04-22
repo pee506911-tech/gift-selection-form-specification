@@ -37,36 +37,7 @@ npx wrangler secret put TIDB_CONNECTION_STRING
 # mysql://user.root:password@gateway01.region.prod.aws.tidbcloud.com:4000/test?sslaccept=strict
 ```
 
-### 4. Create R2 Bucket
-
-```bash
-# Create R2 bucket for images
-npx wrangler r2 bucket create gift-images
-```
-
-### 5. Set Admin Password
-
-The admin password hash is already in `wrangler.toml` as `"123y"` (placeholder).
-
-To generate a proper bcrypt hash:
-
-```bash
-# Install bcrypt-cli
-npm install -g bcrypt-cli
-
-# Generate hash
-bcrypt-cli hash your-secure-password 10
-
-# Update wrangler.toml with the hash
-```
-
-Or update it as a secret:
-
-```bash
-npx wrangler secret put ADMIN_PASSWORD_HASH
-```
-
-### 6. Build and Deploy
+### 4. Build and Deploy
 
 ```bash
 # Build the frontend
@@ -117,7 +88,7 @@ Your stack now uses:
 - ✅ **Cloudflare Workers** - Compute
 - ✅ **Durable Objects** - Real-time state & WebSocket
 - ✅ **TiDB Serverless** - MySQL-compatible database
-- ✅ **R2** - Image storage
+- ✅ **Workers Assets** - Static files & images
 
 ## Troubleshooting
 

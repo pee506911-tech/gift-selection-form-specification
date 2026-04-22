@@ -20,7 +20,7 @@ class_name = "FormDO"
 # Durable Objects migration
 [[migrations]]
 tag = "v1"
-new_classes = ["FormDO"]
+new_sqlite_classes = ["FormDO"]  # Use new_sqlite_classes for free plan
 
 # Environment variables
 [vars]

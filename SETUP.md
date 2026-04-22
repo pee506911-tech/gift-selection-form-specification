@@ -161,9 +161,9 @@ See `migrations/001_initial_schema.sql` for full schema.
 
 ### Images Not Showing
 
-- Verify R2 bucket is created and bound
-- Check that image files exist in `public/images/`
-- Verify the build copied images to `dist/images/`
+- Verify images exist in `public/images/`
+- Check that the build copied images to `dist/images/`
+- Verify the `imageKey` in the database matches the filename
 
 ### Submissions Not Saving
 
@@ -202,5 +202,18 @@ All domain logic is testable without infrastructure dependencies.
 - **Frontend**: React 19, TailwindCSS, Framer Motion
 - **Backend**: Cloudflare Workers (Hono framework)
 - **Database**: TiDB Serverless (MySQL-compatible)
-- **Storage**: Cloudflare R2 (images)
+- **Storage**: Cloudflare Workers Assets (static files & images)
 - **Real-time**: Durable Objects (WebSocket)
+
+## Managing Images
+
+Images are served from the `public/images/` directory and bundled with the app during build.
+
+To add or update images:
+
+1. Place image files in `public/images/`
+2. Update the database `imageKey` field to match the filename (e.g., `images/1.png`)
+3. Run `npm run build` to rebuild
+4. Deploy with `npm run deploy`
+
+Images are automatically copied to `dist/images/` during the build process.
