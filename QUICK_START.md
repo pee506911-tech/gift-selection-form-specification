@@ -19,15 +19,21 @@ npx wrangler secret put TIDB_CONNECTION_STRING
 
 ### 2. Run Database Migrations
 
-Connect to your TiDB cluster and run these SQL files in order:
+```bash
+# Run migrations (creates tables and fixes image keys)
+npm run migrate:tidb
 
-1. `migrations/001_initial_schema.sql`
-2. `migrations/002_assign_image_keys.sql`
-3. `scripts/seed.sql`
+# Seed with sample data
+npm run seed:tidb
 
-You can use:
-- TiDB Cloud's SQL Editor (web interface)
-- MySQL Workbench
+# Or run both at once
+npm run setup:tidb
+```
+
+The migration system will:
+1. Create necessary tables if they don't exist
+2. Fix image key format issues (removes 'images/' prefix)
+3. Track which migrations have been applied
 - DBeaver
 - Command line: `mysql -h host -P 4000 -u user -p < file.sql`
 

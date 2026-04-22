@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { publicApi, type FormSnapshot, type ApiGift } from '../lib/api-client';
+import { getImageUrl } from '../utils/image-url';
 
 /* ─── Jotform-style constants ─── */
 const JF_BLUE = '#2e69ff';
@@ -261,7 +262,7 @@ function JFGiftCard({
   onSelect: () => void;
 }) {
   const [showFullscreen, setShowFullscreen] = useState(false);
-  const imageUrl = gift.imageKey ? `/images/${gift.imageKey}` : null;
+  const imageUrl = getImageUrl(gift.imageKey);
 
   return (
     <motion.div
@@ -690,7 +691,7 @@ export default function UserForm({ slug = 'gift-selection' }: UserFormProps) {
             <div className="flex gap-4">
               {successData.gift.imageKey && (
                 <img
-                  src={`/images/${successData.gift.imageKey}`}
+                  src={getImageUrl(successData.gift.imageKey)}
                   alt={successData.gift.name}
                   className="w-20 h-20 object-cover rounded"
                   onError={(e) => {
@@ -989,7 +990,7 @@ export default function UserForm({ slug = 'gift-selection' }: UserFormProps) {
                     <div className="flex gap-4">
                       {selectedGift.imageKey && (
                         <img
-                          src={`/images/${selectedGift.imageKey}`}
+                          src={getImageUrl(selectedGift.imageKey)}
                           alt={selectedGift.name}
                           className="w-24 h-24 object-cover rounded"
                           onError={(e) => {

@@ -42,13 +42,17 @@ npx wrangler secret put TIDB_CONNECTION_STRING
 # Paste: mysql://user.root:password@host:4000/database?sslaccept=strict
 ```
 
-Run migrations on your TiDB cluster using a MySQL client or TiDB Cloud's SQL editor:
+Run migrations and seed the database:
 
 ```bash
-# Connect to TiDB and run:
-# - migrations/001_initial_schema.sql
-# - migrations/002_assign_image_keys.sql
-# - scripts/seed.sql
+# Run migrations (creates tables and fixes image keys)
+npm run migrate:tidb
+
+# Seed with sample data
+npm run seed:tidb
+
+# Or run both at once
+npm run setup:tidb
 ```
 
 ### 2. Build and Run

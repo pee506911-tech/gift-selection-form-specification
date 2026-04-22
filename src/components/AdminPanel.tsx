@@ -17,6 +17,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { adminApi, type Submission, type PaginatedSubmissions, type ApiGift, type GiftStatus } from '../lib/api-client';
+import { getImageUrl } from '../utils/image-url';
 
 /* ─── Constants ─── */
 const JF_BLUE = '#2e69ff';
@@ -333,7 +334,7 @@ export default function AdminPanel({ token, formId, onLogout }: AdminPanelProps)
                     <div className="aspect-video bg-gray-100 relative">
                       {gift.imageKey ? (
                         <img
-                          src={`/images/${gift.imageKey}`}
+                          src={getImageUrl(gift.imageKey)}
                           alt={gift.name}
                           className="w-full h-full object-cover"
                         />

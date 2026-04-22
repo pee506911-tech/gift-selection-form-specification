@@ -10,7 +10,9 @@
     "build": "vite build",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
+    "migrate:tidb": "node scripts/run-migrations.js",
     "seed:tidb": "node scripts/seed-tidb.js",
+    "setup:tidb": "npm run migrate:tidb && npm run seed:tidb",
     "test": "vitest --run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
