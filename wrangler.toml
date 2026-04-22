@@ -7,6 +7,18 @@ compatibility_date = "2024-12-01"
 directory = "dist"
 binding = "ASSETS"
 
+# Environment variables (non-sensitive)
+[vars]
+ENVIRONMENT = "development"
+ADMIN_PASSWORD_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"  # Change this!
+
+# Secrets (sensitive - DO NOT put actual values here)
+# Set these using: npx wrangler secret put SECRET_NAME
+# Required secrets:
+# - TIDB_CONNECTION_STRING: Your TiDB connection string
+#
+# For local development, create .dev.vars file with actual values
+
 # TiDB Serverless Connection
 # Set your TiDB connection string as a secret:
 # npx wrangler secret put TIDB_CONNECTION_STRING
@@ -21,11 +33,6 @@ class_name = "FormDO"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["FormDO"]  # Use new_sqlite_classes for free plan
-
-# Environment variables
-[vars]
-ENVIRONMENT = "development"
-ADMIN_PASSWORD_HASH = "123y"  # Set in production
 
 # Development environment variables
 [env.dev]

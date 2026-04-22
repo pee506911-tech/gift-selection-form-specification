@@ -200,6 +200,14 @@ app.get('/api/forms/:slug/bootstrap', async (c) => {
   const requestId = c.req.header('x-request-id');
 
   try {
+    // Check if connection string is set
+    if (!bindings.TIDB_CONNECTION_STRING) {
+      logError('TIDB_CONNECTION_STRING not set', new Error('Missing connection string'), requestId);
+      return c.json({ 
+        error: 'Database configuration error. Please set TIDB_CONNECTION_STRING secret.' 
+      }, 500);
+    }
+
     // Wire up dependencies
     const db = createTiDBConnection(bindings.TIDB_CONNECTION_STRING);
     const giftRepo = createGiftRepository(db);
@@ -214,6 +222,7 @@ app.get('/api/forms/:slug/bootstrap', async (c) => {
     const result = await getFormSnapshot(slug, giftRepo, submissionRepo, formRepo);
 
     if (!result.success) {
+      logError('Bootstrap failed', result.error, requestId);
       return c.json({ error: result.error.message }, 400);
     }
 

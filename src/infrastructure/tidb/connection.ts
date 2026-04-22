@@ -10,6 +10,10 @@ export interface TiDBConnection {
 }
 
 export function createTiDBConnection(connectionString: string): TiDBConnection {
+  if (!connectionString) {
+    throw new Error('TIDB_CONNECTION_STRING is not set. Please set it using: npx wrangler secret put TIDB_CONNECTION_STRING');
+  }
+
   const conn = connect({ url: connectionString });
 
   return {
@@ -18,6 +22,7 @@ export function createTiDBConnection(connectionString: string): TiDBConnection {
         const result = await conn.execute(sql, params);
         return success(result.rows as any[]);
       } catch (error) {
+        console.error('TiDB query error:', { sql, params, error });
         return failure(storageReadError(sql, error));
       }
     },
@@ -27,6 +32,7 @@ export function createTiDBConnection(connectionString: string): TiDBConnection {
         const result = await conn.execute(sql, params);
         return success(result);
       } catch (error) {
+        console.error('TiDB execute error:', { sql, params, error });
         return failure(storageWriteError(sql, error));
       }
     },

@@ -1,13 +1,25 @@
 # Local development environment variables
 # Copy this file to .dev.vars and fill in your actual values
+# .dev.vars is gitignored and will NOT be committed
 
-# TiDB Connection String
-# Get this from your TiDB Cloud dashboard
-TIDB_CONNECTION_STRING="mysql://user.root:password@gateway01.region.prod.aws.tidbcloud.com:4000/test?sslaccept=strict"
+# ============================================
+# REQUIRED: TiDB Connection String
+# ============================================
+# Get this from TiDB Cloud Console:
+# 1. Go to https://tidbcloud.com/
+# 2. Select your cluster
+# 3. Click "Connect"
+# 4. Copy the connection string
+TIDB_CONNECTION_STRING="mysql://user.root:YOUR_PASSWORD@gateway01.region.prod.aws.tidbcloud.com:4000/test?sslaccept=strict"
 
-# Admin Password Hash (bcrypt)
+# ============================================
+# REQUIRED: Admin Password Hash
+# ============================================
 # Generate with: bcrypt-cli hash your-password 10
-ADMIN_PASSWORD_HASH="$2a$10$your-bcrypt-hash-here"
+# Or use this example hash (password: "admin123" - CHANGE THIS!)
+ADMIN_PASSWORD_HASH="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
 
+# ============================================
 # Environment
+# ============================================
 ENVIRONMENT="development"
