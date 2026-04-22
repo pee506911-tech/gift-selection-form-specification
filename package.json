@@ -10,6 +10,7 @@
     "build": "vite build",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
+    "seed:tidb": "node scripts/seed-tidb.js",
     "test": "vitest --run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"

@@ -19,10 +19,14 @@ export function createTiDBConnection(connectionString: string): TiDBConnection {
   return {
     async query(sql: string, params: any[] = []): Promise<Result<any[], AppError>> {
       try {
+        console.log('TiDB query:', { sql, params });
         const result = await conn.execute(sql, params);
-        // Defensive: ensure rows exists and is an array
-        const rows = result?.rows ?? [];
-        return success(Array.isArray(rows) ? rows : []);
+        console.log('TiDB query raw result:', JSON.stringify(result, null, 2));
+        
+        // The TiDB driver returns the rows directly, not in a .rows property
+        const rows = Array.isArray(result) ? result : (result?.rows ?? []);
+        console.log('TiDB query processed rows:', rows);
+        return success(rows);
       } catch (error) {
         console.error('TiDB query error:', { sql, params, error });
         return failure(storageReadError(sql, error));

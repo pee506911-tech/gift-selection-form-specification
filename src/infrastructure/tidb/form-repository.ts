@@ -7,10 +7,13 @@ import type { TiDBConnection } from './connection';
 export function createFormRepository(db: TiDBConnection): FormRepository {
   return {
     async findBySlug(slug: string): Promise<Result<{ id: string; slug: string; title: string; status: string } | null, AppError>> {
+      console.log('FormRepository.findBySlug called with slug:', slug);
       const result = await db.query(
         'SELECT id, slug, title, status FROM forms WHERE slug = ?',
         [slug]
       );
+      
+      console.log('FormRepository.findBySlug query result:', JSON.stringify(result, null, 2));
       
       if (!result.success) {
         console.error('Form findBySlug query failed:', { slug, error: result.error });
