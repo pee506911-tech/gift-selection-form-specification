@@ -4,8 +4,11 @@ import UserForm from './components/UserForm';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
 
+// Default form ID - in a real app this would come from config or URL
+const DEFAULT_FORM_ID = 'form-001';
+
 function App() {
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
 
   return (
     <HashRouter>
@@ -14,12 +17,16 @@ function App() {
         <Route
           path="/admin"
           element={
-            adminLoggedIn ? (
-              <AdminPanel onLogout={() => setAdminLoggedIn(false)} />
+            adminToken ? (
+              <AdminPanel
+                token={adminToken}
+                formId={DEFAULT_FORM_ID}
+                onLogout={() => setAdminToken(null)}
+              />
             ) : (
               <AdminLogin
-                onLogin={() => {
-                  setAdminLoggedIn(true);
+                onLogin={(token) => {
+                  setAdminToken(token);
                 }}
               />
             )

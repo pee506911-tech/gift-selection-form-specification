@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check,
   ChevronLeft,
   AlertCircle,
   Loader2,
-  Gift as GiftIcon,
   User,
   ArrowRight,
   RefreshCw,
@@ -14,54 +13,7 @@ import {
   Maximize2,
   X,
 } from 'lucide-react';
-
-/* ─── Hardcoded CMS Data ─── */
-interface Gift {
-  id: string;
-  name: string;
-  imageKey: string;
-  status: 'available' | 'selected' | 'inactive';
-}
-
-const CMS_GIFTS: Gift[] = [
-  { id: '1', name: 'gif 1', imageKey: '1.png', status: 'available' },
-  { id: '2', name: 'gif 2', imageKey: '2.png', status: 'available' },
-  { id: '3', name: 'gif 3', imageKey: '3.png', status: 'available' },
-  { id: '4', name: 'gif 4', imageKey: '4.png', status: 'available' },
-  { id: '5', name: 'gif 5', imageKey: '5.png', status: 'available' },
-  { id: '6', name: 'gif 6', imageKey: '6.png', status: 'available' },
-  { id: '7', name: 'gif 7', imageKey: '7.png', status: 'available' },
-  { id: '8', name: 'gif 8', imageKey: '8.jpg', status: 'available' },
-  { id: '9', name: 'gif 9', imageKey: '9.jpg', status: 'available' },
-  { id: '10', name: 'gif 10', imageKey: '10.jpg', status: 'available' },
-  { id: '11', name: 'gif 11', imageKey: '11.jpg', status: 'available' },
-  { id: '12', name: 'gif 12', imageKey: '12.jpg', status: 'available' },
-  { id: '13', name: 'gif 13', imageKey: '13.jpg', status: 'available' },
-  { id: '14', name: 'gif 14', imageKey: '14.jpg', status: 'available' },
-  { id: '15', name: 'gif 15', imageKey: '15.jpg', status: 'available' },
-  { id: '16', name: 'gif 16', imageKey: '16.jpg', status: 'available' },
-  { id: '17', name: 'gif 17', imageKey: '17.jpg', status: 'available' },
-  { id: '18', name: 'gif 18', imageKey: '18.jpg', status: 'available' },
-  { id: '19', name: 'gif 19', imageKey: '19.jpg', status: 'available' },
-  { id: '20', name: 'gif 20', imageKey: '20.jpg', status: 'available' },
-  { id: '21', name: 'gif 21', imageKey: '21.jpg', status: 'available' },
-  { id: '22', name: 'gif 22', imageKey: '22.jpg', status: 'available' },
-  { id: '23', name: 'gif 23', imageKey: '23.jpg', status: 'available' },
-  { id: '24', name: 'gif 24', imageKey: '24.jpg', status: 'available' },
-  { id: '25', name: 'gif 25', imageKey: '25.jpg', status: 'available' },
-  { id: '26', name: 'gif 26', imageKey: '26.jpg', status: 'available' },
-  { id: '27', name: 'gif 27', imageKey: '27.jpg', status: 'available' },
-  { id: '28', name: 'gif 28', imageKey: '28.jpg', status: 'available' },
-  { id: '29', name: 'gif 29', imageKey: '29.jpg', status: 'available' },
-  { id: '30', name: 'gif 30', imageKey: '30.jpg', status: 'available' },
-];
-
-// Simulated submission storage (in-memory for demo)
-const selectedGiftIds = new Set<string>();
-const submissions: Array<{ id: string; nickname: string; giftId: string; giftNameSnapshot: string; createdAt: string }> = [];
-
-// Generate unique ID
-const generateId = () => Math.random().toString(36).substring(2, 15);
+import { publicApi, type FormSnapshot, type ApiGift } from '../lib/api-client';
 
 /* ─── Jotform-style constants ─── */
 const JF_BLUE = '#2e69ff';
@@ -302,14 +254,14 @@ function JFGiftCard({
   justTakenBy,
   onSelect,
 }: {
-  gift: Gift;
+  gift: ApiGift;
   isSelected: boolean;
   isTaken: boolean;
   justTakenBy?: string;
   onSelect: () => void;
 }) {
   const [showFullscreen, setShowFullscreen] = useState(false);
-  const imageUrl = `/images/${gift.imageKey}`;
+  const imageUrl = gift.imageKey ? `/images/${gift.imageKey}` : null;
 
   return (
     <motion.div
@@ -376,29 +328,37 @@ function JFGiftCard({
       >
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-          <img
-            src={imageUrl}
-            alt={gift.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                `https://placehold.co/300x225/e5e7eb/57647e?text=${encodeURIComponent(gift.name)}`;
-            }}
-          />
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={gift.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  `https://placehold.co/300x225/e5e7eb/57647e?text=${encodeURIComponent(gift.name)}`;
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+              <span className="text-gray-500 text-sm">No image</span>
+            </div>
+          )}
           
           {/* Fullscreen button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowFullscreen(true);
-            }}
-            className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/50 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
-            title="View full screen"
-          >
-            <Maximize2 size={16} />
-          </button>
+          {imageUrl && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowFullscreen(true);
+              }}
+              className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/50 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+              title="View full screen"
+            >
+              <Maximize2 size={16} />
+            </button>
+          )}
           
           {/* Selected checkmark overlay */}
           {isSelected && (
@@ -446,7 +406,7 @@ function JFGiftCard({
 
       {/* Fullscreen Modal */}
       <AnimatePresence>
-        {showFullscreen && (
+        {showFullscreen && imageUrl && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -489,72 +449,54 @@ export default function UserForm({ slug = 'gift-selection' }: UserFormProps) {
   const [step, setStep] = useState(1);
   const [step1, setStep1] = useState<Step1Data>({ nickname: '' });
   const [step2, setStep2] = useState<Step2Data>({ selectedGiftId: null });
-  const [gifts, setGifts] = useState<Gift[]>(CMS_GIFTS);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [success, setSuccess] = useState(false);
   const [successData, setSuccessData] = useState<{
     nickname: string;
-    gift: Gift;
+    gift: ApiGift;
   } | null>(null);
-  const [justTakenGifts, setJustTakenGifts] = useState<Map<string, JustTakenGift>>(new Map());
+  const [justTakenGifts] = useState<Map<string, JustTakenGift>>(new Map());
   const [mySelectedGiftWasTaken, setMySelectedGiftWasTaken] = useState(false);
   
-  // Track previous taken gifts for animation detection
-  const prevTakenRef = useRef<Set<string>>(new Set());
+  // API state
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [snapshot, setSnapshot] = useState<FormSnapshot | null>(null);
   
-  // Simulated real-time updates (simulates other users selecting gifts)
+  // Fetch initial data from API
   useEffect(() => {
-    // Simulate another user selecting a gift every 15-45 seconds (for demo)
-    const simulateOtherUserSelection = () => {
-      const availableGifts = gifts.filter(g => g.status === 'available' && !selectedGiftIds.has(g.id));
-      if (availableGifts.length > 0 && Math.random() > 0.7) {
-        const randomGift = availableGifts[Math.floor(Math.random() * availableGifts.length)];
-        const randomNickname = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Morgan'][Math.floor(Math.random() * 5)];
-        
-        selectedGiftIds.add(randomGift.id);
-        
-        // Update gifts state
-        setGifts(prev => prev.map(g => 
-          g.id === randomGift.id ? { ...g, status: 'selected' } : g
-        ));
-        
-        // Show "just taken" animation
-        setJustTakenGifts(prev => new Map(prev.set(randomGift.id, {
-          giftId: randomGift.id,
-          nickname: randomNickname,
-          timestamp: Date.now()
-        })));
-        
-        // Check if this was the user's selected gift
-        if (step2.selectedGiftId === randomGift.id) {
-          setMySelectedGiftWasTaken(true);
-        }
-        
-        // Clear "just taken" after 4 seconds
-        setTimeout(() => {
-          setJustTakenGifts(prev => {
-            const next = new Map(prev);
-            next.delete(randomGift.id);
-            return next;
-          });
-        }, 4000);
+    async function fetchData() {
+      setLoading(true);
+      setLoadError(null);
+      
+      const result = await publicApi.getFormSnapshot(slug);
+      
+      if (result.success) {
+        setSnapshot(result.data);
+      } else {
+        setLoadError(result.error);
       }
       
-      // Schedule next simulation
-      const nextDelay = 15000 + Math.random() * 30000;
-      setTimeout(simulateOtherUserSelection, nextDelay);
-    };
+      setLoading(false);
+    }
     
-    const timeout = setTimeout(simulateOtherUserSelection, 20000);
-    return () => clearTimeout(timeout);
-  }, [gifts, step2.selectedGiftId]);
+    fetchData();
+  }, [slug]);
 
-  /* Derived */
-  const takenGiftIds = new Set(gifts.filter(g => g.status === 'selected' || selectedGiftIds.has(g.id)).map(g => g.id));
-  const availableGifts = gifts.filter(g => g.status === 'available' && !selectedGiftIds.has(g.id));
-  const takenGifts = gifts.filter(g => g.status === 'selected' || selectedGiftIds.has(g.id));
+  // Derive gifts from snapshot
+  const gifts = snapshot?.gifts ? [
+    ...snapshot.gifts.available,
+    ...snapshot.gifts.selected,
+    ...snapshot.gifts.inactive,
+  ] : [];
+  
+  const takenGiftIds = new Set(
+    snapshot?.gifts.selected.map(g => g.id) || []
+  );
+  const availableGifts = snapshot?.gifts.available || [];
+  const takenGifts = snapshot?.gifts.selected || [];
   const activeGifts = [...availableGifts, ...takenGifts];
   const availableCount = availableGifts.length;
   const selectedGift = gifts.find((g) => g.id === step2.selectedGiftId);
@@ -608,26 +550,37 @@ export default function UserForm({ slug = 'gift-selection' }: UserFormProps) {
     setSubmitting(true);
     setSubmitError('');
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Record submission
-    selectedGiftIds.add(step2.selectedGiftId);
-    submissions.push({
-      id: generateId(),
+    // Call real API
+    const result = await publicApi.submitGiftSelection(slug, {
       nickname: step1.nickname.trim(),
       giftId: step2.selectedGiftId,
-      giftNameSnapshot: selectedGift.name,
-      createdAt: new Date().toISOString(),
     });
     
-    // Update gift status
-    setGifts(prev => prev.map(g => 
-      g.id === step2.selectedGiftId ? { ...g, status: 'selected' } : g
-    ));
+    if (result.success) {
+      // Update local state to reflect the selection
+      if (snapshot) {
+        setSnapshot({
+          ...snapshot,
+          gifts: {
+            available: snapshot.gifts.available.filter(g => g.id !== step2.selectedGiftId),
+            selected: [...snapshot.gifts.selected, { ...selectedGift, status: 'selected' as const }],
+            inactive: snapshot.gifts.inactive,
+          },
+          stats: {
+            ...snapshot.stats,
+            availableGifts: snapshot.stats.availableGifts - 1,
+            selectedGifts: snapshot.stats.selectedGifts + 1,
+            totalSubmissions: snapshot.stats.totalSubmissions + 1,
+          },
+        });
+      }
+      
+      setSuccessData({ nickname: step1.nickname.trim(), gift: selectedGift });
+      setSuccess(true);
+    } else {
+      setSubmitError(result.error);
+    }
     
-    setSuccessData({ nickname: step1.nickname.trim(), gift: selectedGift });
-    setSuccess(true);
     setSubmitting(false);
   };
 
@@ -641,6 +594,57 @@ export default function UserForm({ slug = 'gift-selection' }: UserFormProps) {
     setSuccessData(null);
     setMySelectedGiftWasTaken(false);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ backgroundColor: JF_BG }}
+      >
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: JF_BLUE }} />
+          <p style={{ color: JF_LABEL }}>Loading gifts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (loadError) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ backgroundColor: JF_BG }}
+      >
+        <div className="max-w-md w-full bg-white rounded-lg p-8 text-center" style={{ border: `1px solid ${JF_BORDER}` }}>
+          <AlertCircle className="w-12 h-12 mx-auto mb-4" style={{ color: JF_RED }} />
+          <h2 className="text-lg font-bold mb-2" style={{ color: JF_TEXT }}>Failed to Load</h2>
+          <p className="text-sm mb-4" style={{ color: JF_LABEL }}>{loadError}</p>
+          <JFButton onClick={() => window.location.reload()}>
+            <RefreshCw className="w-4 h-4" />
+            Retry
+          </JFButton>
+        </div>
+      </div>
+    );
+  }
+
+  // Form closed state
+  if (snapshot?.form.status === 'closed') {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ backgroundColor: JF_BG }}
+      >
+        <div className="max-w-md w-full bg-white rounded-lg p-8 text-center" style={{ border: `1px solid ${JF_BORDER}` }}>
+          <Lock className="w-12 h-12 mx-auto mb-4" style={{ color: JF_LABEL }} />
+          <h2 className="text-lg font-bold mb-2" style={{ color: JF_TEXT }}>Form Closed</h2>
+          <p className="text-sm" style={{ color: JF_LABEL }}>This gift selection form is currently closed.</p>
+        </div>
+      </div>
+    );
+  }
 
   /* Success state */
   if (success && successData) {
@@ -684,17 +688,19 @@ export default function UserForm({ slug = 'gift-selection' }: UserFormProps) {
             style={{ backgroundColor: '#f8fafc', border: `1px solid ${JF_BORDER}` }}
           >
             <div className="flex gap-4">
-              <img
-                src={`/images/${successData.gift.imageKey}`}
-                alt={successData.gift.name}
-                className="w-20 h-20 object-cover rounded"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    `https://placehold.co/80x80/e5e7eb/57647e?text=${encodeURIComponent(
-                      successData.gift.name
-                    )}`;
-                }}
-              />
+              {successData.gift.imageKey && (
+                <img
+                  src={`/images/${successData.gift.imageKey}`}
+                  alt={successData.gift.name}
+                  className="w-20 h-20 object-cover rounded"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      `https://placehold.co/80x80/e5e7eb/57647e?text=${encodeURIComponent(
+                        successData.gift.name
+                      )}`;
+                  }}
+                />
+              )}
               <div>
                 <p className="text-base font-semibold" style={{ color: JF_TEXT }}>
                   {successData.gift.name}
@@ -737,7 +743,7 @@ export default function UserForm({ slug = 'gift-selection' }: UserFormProps) {
             className="text-2xl font-bold mb-1"
             style={{ color: JF_TEXT }}
           >
-            Choose Your Gift
+            {snapshot?.form.title || 'Choose Your Gift'}
           </h1>
           <p className="text-sm mb-6" style={{ color: JF_LABEL }}>
             Please enter your nickname and select one available gift.
@@ -981,17 +987,19 @@ export default function UserForm({ slug = 'gift-selection' }: UserFormProps) {
                       </button>
                     </div>
                     <div className="flex gap-4">
-                      <img
-                        src={`/images/${selectedGift.imageKey}`}
-                        alt={selectedGift.name}
-                        className="w-24 h-24 object-cover rounded"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            `https://placehold.co/96x96/e5e7eb/57647e?text=${encodeURIComponent(
-                              selectedGift.name
-                            )}`;
-                        }}
-                      />
+                      {selectedGift.imageKey && (
+                        <img
+                          src={`/images/${selectedGift.imageKey}`}
+                          alt={selectedGift.name}
+                          className="w-24 h-24 object-cover rounded"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              `https://placehold.co/96x96/e5e7eb/57647e?text=${encodeURIComponent(
+                                selectedGift.name
+                              )}`;
+                          }}
+                        />
+                      )}
                       <div>
                         <p
                           className="text-base font-semibold"

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Shield, Lock, ArrowLeft, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { adminApi } from '../lib/api-client';
 
 interface AdminLoginProps {
-  onLogin: () => void;
+  onLogin: (token: string) => void;
 }
 
 export default function AdminLogin({ onLogin }: AdminLoginProps) {
@@ -12,21 +13,20 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simple demo auth - password is "admin"
-    // TODO: Phase 4 - implement proper API-based auth
-    setTimeout(() => {
-      if (password === 'admin') {
-        onLogin();
-      } else {
-        setError('Invalid password. Try "admin".');
-        setIsLoading(false);
-      }
-    }, 500);
+    const result = await adminApi.login(password);
+    
+    if (result.success) {
+      onLogin(result.data.token);
+    } else {
+      setError(result.error);
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -76,8 +76,9 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600"
+              className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-start gap-2"
             >
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               {error}
             </motion.div>
           )}
@@ -85,9 +86,16 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
           <button
             type="submit"
             disabled={isLoading || !password}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-xl transition-all active:scale-[0.98]"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold rounded-xl transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2"
           >
-            {isLoading ? 'Verifying...' : 'Sign In'}
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
 
@@ -100,8 +108,6 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             Back to Gift Form
           </a>
         </div>
-
-        <p className="text-center text-xs text-gray-400 mt-4">Demo password: admin</p>
       </motion.div>
     </div>
   );
