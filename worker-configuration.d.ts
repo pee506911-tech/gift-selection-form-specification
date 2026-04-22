@@ -6,6 +6,5 @@ interface Env {
 	ADMIN_PASSWORD: string;
 	ENVIRONMENT: string;
 	FORM_DO: DurableObjectNamespace<import("./src/worker/index").FormDO>;
-	IMAGES: R2Bucket;
 	ASSETS: Fetcher;
 }

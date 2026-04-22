@@ -12,11 +12,6 @@ binding = "ASSETS"
 # npx wrangler secret put TIDB_CONNECTION_STRING
 # Format: mysql://user:password@host:4000/database?sslaccept=strict
 
-# R2 Bucket Binding for image storage
-[[r2_buckets]]
-binding = "IMAGES"
-bucket_name = "gift-images"
-
 # Durable Objects binding
 [[durable_objects.bindings]]
 name = "FORM_DO"

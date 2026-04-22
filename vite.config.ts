@@ -16,4 +16,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  // Copy public/images to dist/images
+  publicDir: 'public',
 });

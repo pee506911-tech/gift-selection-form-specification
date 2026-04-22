@@ -1,0 +1,13 @@
+# Local development environment variables
+# Copy this file to .dev.vars and fill in your actual values
+
+# TiDB Connection String
+# Get this from your TiDB Cloud dashboard
+TIDB_CONNECTION_STRING="mysql://user.root:password@gateway01.region.prod.aws.tidbcloud.com:4000/test?sslaccept=strict"
+
+# Admin Password Hash (bcrypt)
+# Generate with: bcrypt-cli hash your-password 10
+ADMIN_PASSWORD_HASH="$2a$10$your-bcrypt-hash-here"
+
+# Environment
+ENVIRONMENT="development"

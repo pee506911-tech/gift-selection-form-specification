@@ -145,7 +145,6 @@ function validateGiftId(input: string): string | null {
 // Type definitions for Cloudflare bindings
 interface Env {
   TIDB_CONNECTION_STRING: string;
-  IMAGES: R2Bucket;
   FORM_DO: DurableObjectNamespace;
   ASSETS: Fetcher;  // Workers Assets binding for static files
   ENVIRONMENT: string;
@@ -175,7 +174,6 @@ app.get('/api/health', async (c) => {
     environment: bindings.ENVIRONMENT,
     checks: {
       database: 'ok' as 'ok' | 'error',
-      r2: 'ok' as 'ok' | 'error',
     },
     timestamp: new Date().toISOString(),
   };
@@ -189,16 +187,6 @@ app.get('/api/health', async (c) => {
     health.checks.database = 'error';
     health.status = 'degraded';
     logError('Health check: database connection failed', error, requestId);
-  }
-
-  // Check R2 connectivity
-  try {
-    await bindings.IMAGES.list({ limit: 1 });
-    health.checks.r2 = 'ok';
-  } catch (error) {
-    health.checks.r2 = 'error';
-    health.status = 'degraded';
-    logError('Health check: R2 connection failed', error, requestId);
   }
 
   const statusCode = health.status === 'ok' ? 200 : 503;
@@ -615,54 +603,12 @@ app.get('/api/admin/forms/:formId/submissions/export', requireAuth(), async (c) 
   }
 });
 
-// Image upload endpoint
+// Image upload endpoint - Images are now served from assets
+// To add new images, place them in public/images/ and rebuild
 app.post('/api/admin/images/upload', requireAuth(), async (c) => {
-  const bindings = env(c);
-  const ip = c.req.header('cf-connecting-ip') || 'unknown';
-  const requestId = c.req.header('x-request-id');
-
-  try {
-    const formData = await c.req.formData();
-    const file = formData.get('file') as File;
-
-    if (!file) {
-      return c.json({ error: 'No file provided' }, 400);
-    }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      logAuditEvent('IMAGE_UPLOAD_FAILED', { fileType: file.type, fileSize: file.size, reason: 'Invalid type' }, ip, requestId);
-      return c.json({ error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.' }, 400);
-    }
-
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      logAuditEvent('IMAGE_UPLOAD_FAILED', { fileType: file.type, fileSize: file.size, reason: 'Too large' }, ip, requestId);
-      return c.json({ error: 'File too large. Maximum size is 5MB.' }, 400);
-    }
-
-    // Generate unique key for the image
-    const ext = file.name.split('.').pop();
-    const key = `images/${crypto.randomUUID()}.${ext}`;
-
-    // Upload to R2
-    const arrayBuffer = await file.arrayBuffer();
-    await bindings.IMAGES.put(key, arrayBuffer, {
-      httpMetadata: {
-        contentType: file.type,
-      },
-    });
-
-    // Return the image key
-    logAuditEvent('IMAGE_UPLOAD_SUCCESS', { key, fileType: file.type, fileSize: file.size }, ip, requestId);
-    return c.json({ success: true, imageKey: key });
-  } catch (error) {
-    logError('Image upload error', error, requestId);
-    logAuditEvent('IMAGE_UPLOAD_ERROR', { error: String(error) }, ip, requestId);
-    return c.json({ error: 'Internal server error' }, 500);
-  }
+  return c.json({ 
+    error: 'Image upload disabled. Images are served from assets. Place images in public/images/ and rebuild.' 
+  }, 501);
 });
 
 // Serve static assets for non-API routes (SPA fallback)

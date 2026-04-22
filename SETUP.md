@@ -27,47 +27,31 @@ The app is now fully connected to the backend! Here's what works:
 
 ## Setup Instructions
 
-### 1. Database Setup
+### 1. TiDB Serverless Setup
 
-First, create a D1 database:
+Create a TiDB Serverless cluster:
 
-```bash
-# Create D1 database
-npx wrangler d1 create gift_selection_db
+1. Go to [TiDB Cloud](https://tidbcloud.com/)
+2. Create a new Serverless cluster
+3. Copy your connection string
 
-# Copy the database_id from output and update wrangler.toml
-```
-
-Run migrations:
+Set it as a Cloudflare secret:
 
 ```bash
-# Apply migrations
-npx wrangler d1 migrations apply gift_selection_db --local
-
-# For production
-npx wrangler d1 migrations apply gift_selection_db --remote
+npx wrangler secret put TIDB_CONNECTION_STRING
+# Paste: mysql://user.root:password@host:4000/database?sslaccept=strict
 ```
 
-Seed the database:
+Run migrations on your TiDB cluster using a MySQL client or TiDB Cloud's SQL editor:
 
 ```bash
-# Seed local database
-npx wrangler d1 execute gift_selection_db --local --file=./scripts/seed.sql
-
-# For production
-npx wrangler d1 execute gift_selection_db --remote --file=./scripts/seed.sql
+# Connect to TiDB and run:
+# - migrations/001_initial_schema.sql
+# - migrations/002_assign_image_keys.sql
+# - scripts/seed.sql
 ```
 
-### 2. R2 Bucket Setup
-
-Create an R2 bucket for images:
-
-```bash
-# Create R2 bucket
-npx wrangler r2 bucket create gift-images
-```
-
-### 3. Admin Password Setup
+### 2. Build and Run
 
 Generate a bcrypt hash for your admin password:
 
@@ -86,17 +70,21 @@ Update `wrangler.toml` with the hash:
 ADMIN_PASSWORD_HASH = "your-bcrypt-hash-here"
 ```
 
-### 4. Build and Run
+### 2. Build and Run
 
 ```bash
 # Install dependencies
 npm install
 
+# Set up local environment (copy and edit)
+cp .dev.vars.example .dev.vars
+# Edit .dev.vars with your TiDB connection string
+
 # Build frontend
 npm run build
 
 # Run locally
-npm run dev
+npm run dev:full
 
 # Deploy to production
 npm run deploy
@@ -136,7 +124,6 @@ npm run deploy
 - `DELETE /api/admin/forms/:formId/gifts/:giftId` - Delete gift
 - `GET /api/admin/forms/:formId/submissions` - List submissions (paginated)
 - `GET /api/admin/forms/:formId/submissions/export` - Export CSV
-- `POST /api/admin/images/upload` - Upload image to R2
 
 ## Environment Variables
 
@@ -202,10 +189,18 @@ The app follows clean architecture principles:
 src/
 ├── domain/          # Business logic (pure functions)
 ├── application/     # Use cases
-├── infrastructure/  # External adapters (DB, R2, etc.)
+├── infrastructure/  # External adapters (TiDB, R2, etc.)
 ├── components/      # React UI components
 ├── lib/            # API client
 └── worker/         # Cloudflare Worker entry point
 ```
 
 All domain logic is testable without infrastructure dependencies.
+
+## Tech Stack
+
+- **Frontend**: React 19, TailwindCSS, Framer Motion
+- **Backend**: Cloudflare Workers (Hono framework)
+- **Database**: TiDB Serverless (MySQL-compatible)
+- **Storage**: Cloudflare R2 (images)
+- **Real-time**: Durable Objects (WebSocket)
