@@ -67,18 +67,7 @@ Create an R2 bucket for images:
 npx wrangler r2 bucket create gift-images
 ```
 
-### 3. KV Namespace Setup
-
-Create a KV namespace for sessions:
-
-```bash
-# Create KV namespace
-npx wrangler kv:namespace create SESSIONS
-
-# Copy the id from output and update wrangler.toml
-```
-
-### 4. Admin Password Setup
+### 3. Admin Password Setup
 
 Generate a bcrypt hash for your admin password:
 
@@ -97,7 +86,7 @@ Update `wrangler.toml` with the hash:
 ADMIN_PASSWORD_HASH = "your-bcrypt-hash-here"
 ```
 
-### 5. Build and Run
+### 4. Build and Run
 
 ```bash
 # Install dependencies

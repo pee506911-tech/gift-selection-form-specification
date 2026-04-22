@@ -40,8 +40,3 @@ vars = { ENVIRONMENT = "development" }
 # Production environment
 [env.production]
 vars = { ENVIRONMENT = "production" }
-
-# KV for admin sessions (optional alternative to cookies)
-[[kv_namespaces]]
-binding = "SESSIONS"
-id = "pee"  # Replace with actual KV namespace ID

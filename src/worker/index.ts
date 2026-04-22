@@ -3,7 +3,6 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { env } from 'hono/adapter';
-import { serveStatic } from 'hono/cloudflare-workers';
 
 // Domain validation helpers
 // import { parseGiftCode, parseNonEmptyString } from '../domain/types';
@@ -79,16 +78,6 @@ function logAuditEvent(event: string, data: any, ip?: string, requestId?: string
 }
 
 // Structured logging helper
-function logInfo(message: string, data: any = {}, requestId?: string) {
-  console.log(JSON.stringify({
-    level: 'info',
-    timestamp: new Date().toISOString(),
-    message,
-    requestId,
-    ...data,
-  }));
-}
-
 function logError(message: string, error: any, requestId?: string) {
   console.log(JSON.stringify({
     level: 'error',
@@ -158,7 +147,6 @@ interface Env {
   DB: D1Database;
   IMAGES: R2Bucket;
   FORM_DO: DurableObjectNamespace;
-  SESSIONS: KVNamespace;
   ASSETS: Fetcher;  // Workers Assets binding for static files
   ENVIRONMENT: string;
   ADMIN_PASSWORD_HASH: string;
@@ -188,7 +176,6 @@ app.get('/api/health', async (c) => {
     checks: {
       database: 'ok' as 'ok' | 'error',
       r2: 'ok' as 'ok' | 'error',
-      kv: 'ok' as 'ok' | 'error',
     },
     timestamp: new Date().toISOString(),
   };
@@ -212,16 +199,6 @@ app.get('/api/health', async (c) => {
     health.checks.r2 = 'error';
     health.status = 'degraded';
     logError('Health check: R2 connection failed', error, requestId);
-  }
-
-  // Check KV connectivity
-  try {
-    await bindings.SESSIONS.get('health-check', { type: 'text' });
-    health.checks.kv = 'ok';
-  } catch (error) {
-    health.checks.kv = 'error';
-    health.status = 'degraded';
-    logError('Health check: KV connection failed', error, requestId);
   }
 
   const statusCode = health.status === 'ok' ? 200 : 503;
@@ -268,8 +245,8 @@ app.post('/api/forms/:slug/submissions', rateLimit(10, 60000), async (c) => {
 
   try {
     // CSRF validation
-    const csrfToken = c.req.header('X-CSRF-Token');
-    const sessionToken = c.req.header('Cookie')?.match(/csrf_token=([^;]+)/)?.[1];
+    const csrfToken = c.req.header('X-CSRF-Token') || null;
+    const sessionToken = c.req.header('Cookie')?.match(/csrf_token=([^;]+)/)?.[1] || null;
 
     if (!validateCSRFToken(csrfToken, sessionToken)) {
       logWarn('CSRF validation failed', { ip }, requestId);
@@ -699,17 +676,18 @@ app.get('*', async (c) => {
     
     // For SPA: serve index.html for non-asset routes
     if (!path.includes('.') || path.endsWith('.html')) {
-      const asset = await bindings.ASSETS?.get('index.html');
-      if (asset) {
-        return new Response(asset, {
+      const indexResponse = await bindings.ASSETS.fetch(new Request(`${url.origin}/index.html`));
+      if (indexResponse.ok) {
+        return new Response(await indexResponse.text(), {
           headers: { 'Content-Type': 'text/html' },
         });
       }
     }
     
     // Try to get the asset
-    const asset = await bindings.ASSETS?.get(path.slice(1) || 'index.html');
-    if (asset) {
+    const assetPath = path.slice(1) || 'index.html';
+    const assetResponse = await bindings.ASSETS.fetch(new Request(`${url.origin}/${assetPath}`));
+    if (assetResponse.ok) {
       // Determine content type
       const ext = path.split('.').pop() || '';
       const contentTypes: Record<string, string> = {
@@ -727,7 +705,7 @@ app.get('*', async (c) => {
         'woff2': 'font/woff2',
       };
       
-      return new Response(asset, {
+      return new Response(await assetResponse.text(), {
         headers: { 
           'Content-Type': contentTypes[ext] || 'application/octet-stream' 
         },
@@ -735,9 +713,9 @@ app.get('*', async (c) => {
     }
     
     // Fallback to index.html for SPA routing
-    const indexAsset = await bindings.ASSETS?.get('index.html');
-    if (indexAsset) {
-      return new Response(indexAsset, {
+    const fallbackResponse = await bindings.ASSETS.fetch(new Request(`${url.origin}/index.html`));
+    if (fallbackResponse.ok) {
+      return new Response(await fallbackResponse.text(), {
         headers: { 'Content-Type': 'text/html' },
       });
     }
