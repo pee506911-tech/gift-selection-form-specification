@@ -10,7 +10,7 @@ binding = "ASSETS"
 # Environment variables (non-sensitive)
 [vars]
 ENVIRONMENT = "development"
-ADMIN_PASSWORD_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"  # Change this!
+ADMIN_PASSWORD_HASH = "$2b$10$oYNCioi0PumlFx.c0M849unj2o2NJZcEL/k45FmS1USLJoqq/0Ble"  # Change this!
 
 # Secrets (sensitive - DO NOT put actual values here)
 # Set these using: npx wrangler secret put SECRET_NAME

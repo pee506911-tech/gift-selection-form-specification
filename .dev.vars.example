@@ -17,7 +17,7 @@ TIDB_CONNECTION_STRING="mysql://user.root:YOUR_PASSWORD@gateway01.region.prod.aw
 # ============================================
 # Generate with: bcrypt-cli hash your-password 10
 # Or use this example hash (password: "admin123" - CHANGE THIS!)
-ADMIN_PASSWORD_HASH="$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
+ADMIN_PASSWORD_HASH="$2b$10$oYNCioi0PumlFx.c0M849unj2o2NJZcEL/k45FmS1USLJoqq/0Ble"
 
 # ============================================
 # Environment
