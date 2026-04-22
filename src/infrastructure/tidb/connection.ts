@@ -20,7 +20,9 @@ export function createTiDBConnection(connectionString: string): TiDBConnection {
     async query(sql: string, params: any[] = []): Promise<Result<any[], AppError>> {
       try {
         const result = await conn.execute(sql, params);
-        return success(result.rows as any[]);
+        // Defensive: ensure rows exists and is an array
+        const rows = result?.rows ?? [];
+        return success(Array.isArray(rows) ? rows : []);
       } catch (error) {
         console.error('TiDB query error:', { sql, params, error });
         return failure(storageReadError(sql, error));

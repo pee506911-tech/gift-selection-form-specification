@@ -13,14 +13,18 @@ export function createFormRepository(db: TiDBConnection): FormRepository {
       );
       
       if (!result.success) {
+        console.error('Form findBySlug query failed:', { slug, error: result.error });
         return result;
       }
 
-      if (result.data.length === 0) {
+      // Defensive check: ensure data exists and is an array
+      if (!result.data || !Array.isArray(result.data) || result.data.length === 0) {
+        console.log('Form not found:', { slug, dataExists: !!result.data, isArray: Array.isArray(result.data), length: result.data?.length });
         return success(null);
       }
 
       const row = result.data[0];
+      console.log('Form found:', { slug, formId: row.id });
       return success({
         id: row.id,
         slug: row.slug,

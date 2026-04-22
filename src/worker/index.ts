@@ -218,11 +218,27 @@ app.get('/api/forms/:slug/bootstrap', async (c) => {
     const csrfToken = generateCSRFToken();
     c.header('X-CSRF-Token', csrfToken);
 
+    console.log(JSON.stringify({
+      level: 'info',
+      timestamp: new Date().toISOString(),
+      message: 'Bootstrap request',
+      slug,
+      requestId,
+    }));
+
     // Call use case
     const result = await getFormSnapshot(slug, giftRepo, submissionRepo, formRepo);
 
     if (!result.success) {
       logError('Bootstrap failed', result.error, requestId);
+      
+      // Check if it's a "form not found" error
+      if (result.error.message?.includes('not found')) {
+        return c.json({ 
+          error: `Form '${slug}' not found. Please ensure the database has been seeded. Run: npx wrangler d1 execute DB --remote --file=scripts/seed-tidb.sql` 
+        }, 404);
+      }
+      
       return c.json({ error: result.error.message }, 400);
     }
 
